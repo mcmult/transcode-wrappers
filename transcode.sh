@@ -11,7 +11,7 @@ function hdr_setup() {
 	HDR_INFO=$(ffprobe -hide_banner -select_streams v -show_frames -read_intervals "%+#1" -show_entries "frame=color_space,color_primaries,color_transfer,side_data_list,pix_fmt" -i "${1}")
 
 	# if not defined, not hdr.
-	if [ "$(echo "$HDR_INFO" | grep -c "color_space=unknown")" != "0" ]; then
+	if [ "x$HDR_INFO" == "x" ] || [ "$(echo "$HDR_INFO" | grep -c "color_space=unknown")" != "0" ]; then
 		echo -n "";
 		return;
 	fi

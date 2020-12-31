@@ -39,21 +39,23 @@ for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* \
 	OUTFILE="$FPATH/$FNAME"
 	ARCHIVEPATH="$ARCHIVE_LOC/${FPATH#$RAW_LOC}"
 	STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
-	X265_PARAMS=""
 	echo -n "Detecting Crop for $INFILE... "
 	CROP=$(ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
 	echo "${CROP}"
 	echo -n "Detecting if HDR..."
 	HDR=$(hdr_setup "${INFILE}")
-	if [ "${HDR}" != "" ]; then
-		X265_PARAMS="-x265-params $HDR"
-		echo "HDR found, params set ($HDR)"
+	if [ "x${HDR}" != "x" ]; then
+		echo "HDR found ($HDR)"
 	else
 		echo "not found"
 	fi
 	set -e
 	echo "$(date): Transcoding $INFILE to $OUTFILE"
-	ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -c:v libx265 $X265_PARAMS -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
+	if [ "x${HDR}" == "x" ]; then
+		ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -c:v libx265 -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
+	else
+		ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -c:v libx265 -x265-params "${HDR}" -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
+	fi
 	echo "$(date): Archiving $INFILE to ${ARCHIVEPATH}/$(basename $INFILE)" 
 	mkdir -p "$ARCHIVEPATH"
 	mv "$INFILE" "${ARCHIVEPATH}/$(basename $INFILE)"

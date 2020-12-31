@@ -51,6 +51,7 @@ for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* \
 	else
 		echo "not found"
 	fi
+	set -e
 	echo "$(date): Transcoding $INFILE to $OUTFILE"
 	ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -c:v libx265 $X265_PARAMS -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
 	echo "$(date): Archiving $INFILE to ${ARCHIVEPATH}/$(basename $INFILE)" 

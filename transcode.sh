@@ -47,7 +47,7 @@ for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* \
 	HDR=$(hdr_setup "${INFILE}")
 	if [ "${HDR}" != "" ]; then
 		X265_PARAMS="-x265-params $HDR"
-		echo "HDR found, params set"
+		echo "HDR found, params set ($HDR)"
 	else
 		echo "not found"
 	fi

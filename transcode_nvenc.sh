@@ -74,6 +74,6 @@ function transcode_files() {
 	done
 }
 
-transcode_files()
+transcode_files "no"
 
 IFS="$OLD_IFS"

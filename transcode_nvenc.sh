@@ -32,43 +32,48 @@ function hdr_setup() {
 	echo -n "$X265_PARAMS"
 }
 
+function transcode_files() {
+	for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* -a ! -path *exclude* \)); do
+		FNAME=$(basename $INFILE | sed 's/\.raw//')
+		FPATH=$(dirname $INFILE)
+		OUTFILE="$FPATH/$FNAME"
+		ARCHIVEPATH="$ARCHIVE_LOC/${FPATH#$RAW_LOC}"
+		STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
+		echo -n "Detecting HDR for $INFILE ... "
+		HDR=$(hdr_setup "${INFILE}")
+		if [ "x${HDR}" != "x" ]; then
+			echo "HDR found ($HDR)"
+			if [ "$1" != "yes" ]; then
+				echo "Skipping for now, HDR not supported (yet)"
+				continue
+			fi
+		else
+			echo "not found"
+		fi
+		echo -n "Detecting Crop for $INFILE ... "
+		CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+		echo -n "${CROP}"
+		# nvidia crop translation
+		NV_CROP_LR="$(echo ${CROP} | awk -F ':' '{print $3}')"
+		NV_CROP_TB="$(echo ${CROP} | awk -F ':' '{print $4}')"
+		NV_CROP="${NV_CROP_TB}x${NV_CROP_TB}x${NV_CROP_LR}x${NV_CROP_LR}"
+		echo " ${NV_CROP}"
+		set -e
+		echo "$(date): Transcoding $INFILE to $OUTFILE"
+		if [ "x${HDR}" == "x" ]; then
+			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 18 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${OUTFILE}"
+		else
+			ffmpeg -vsync passthrough -hwaccel cuda -hwacel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${HDR}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
+		fi
+		echo "$(date): Archiving $INFILE to ${ARCHIVEPATH}/$(basename $INFILE)"
+		mkdir -p "$ARCHIVEPATH"
+		mv "$INFILE" "${ARCHIVEPATH}/$(basename $INFILE)"
+		echo "$(date): Staging $INFILE to ${STAGEPATH}/${FNAME}"
+		mkdir -p "$STAGEPATH"
+		mv "$OUTFILE" "${STAGEPATH}/${FNAME}"
+	done
+}
 
-for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* \)); do
-	FNAME=$(basename $INFILE | sed 's/\.raw//')
-	FPATH=$(dirname $INFILE)
-	OUTFILE="$FPATH/$FNAME"
-	ARCHIVEPATH="$ARCHIVE_LOC/${FPATH#$RAW_LOC}"
-	STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
-	echo -n "Detecting HDR for $INFILE ... "
-	HDR=$(hdr_setup "${INFILE}")
-	if [ "x${HDR}" != "x" ]; then
-		echo "HDR found ($HDR)"
-	else
-		echo "not found"
-	fi
-	echo -n "Detecting Crop for $INFILE ... "
-	CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-	echo -n "${CROP}"
-	# nvidia crop translation
-	NV_CROP_LR="$(echo ${CROP} | awk -F ':' '{print $3}')"
-	NV_CROP_TB="$(echo ${CROP} | awk -F ':' '{print $4}')"
-	NV_CROP="${NV_CROP_TB}x${NV_CROP_TB}x${NV_CROP_LR}x${NV_CROP_LR}"
-	echo " ${NV_CROP}"
-	set -e
-	echo "$(date): Transcoding $INFILE to $OUTFILE"
-	if [ "x${HDR}" == "x" ]; then
-		ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 18 -c:a copy -c:s copy "${OUTFILE}"
-	else
-		echo 'HDR not supported yet'
-		continue
-		ffmpeg -vsync passthrough -hwaccel cuda -hwacel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -x265-params "${HDR}" -preset slow -cq:v 18 -c:a copy -c:s copy "${OUTFILE}"
-	fi
-	echo "$(date): Archiving $INFILE to ${ARCHIVEPATH}/$(basename $INFILE)" 
-	mkdir -p "$ARCHIVEPATH"
-	mv "$INFILE" "${ARCHIVEPATH}/$(basename $INFILE)"
-	echo "$(date): Staging $INFILE to ${STAGEPATH}/${FNAME}"
-	mkdir -p "$STAGEPATH"
-	mv "$OUTFILE" "${STAGEPATH}/${FNAME}"
-done
+transcode_files()
 
 IFS="$OLD_IFS"

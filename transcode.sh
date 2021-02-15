@@ -52,9 +52,9 @@ for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* \
 	set -e
 	echo "$(date): Transcoding $INFILE to $OUTFILE"
 	if [ "x${HDR}" == "x" ]; then
-		ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -c:v libx265 -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
+		ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
 	else
-		ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -c:v libx265 -x265-params "${HDR}" -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
+		ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${HDR}" -vf "${CROP}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
 	fi
 	echo "$(date): Archiving $INFILE to ${ARCHIVEPATH}/$(basename $INFILE)" 
 	mkdir -p "$ARCHIVEPATH"

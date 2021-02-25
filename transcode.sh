@@ -33,7 +33,7 @@ function hdr_setup() {
 }
 
 
-for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* \)); do
+for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *ZZ_Done* -a ! -path *exclude* \)); do
 	FNAME=$(basename $INFILE | sed 's/\.raw//')
 	FPATH=$(dirname $INFILE)
 	OUTFILE="$FPATH/$FNAME"

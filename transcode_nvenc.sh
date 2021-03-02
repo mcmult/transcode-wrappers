@@ -71,7 +71,14 @@ function transcode_files() {
 		echo "$(date): Transcoding $INFILE to $OUTFILE"
 		mkdir -p "${STAGEPATH}"
 		if [ "$HDR" == "0" ]; then
-			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 18 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${OUTFILE}"
+			if [ "x${X265_PARAMS}" == "x" ]; then
+				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${nv_crop}" -c:v h264_cuvid -i "${infile}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 18 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${outfile}"
+			else
+				PRIMARIES="$(echo "${X265_PARAMS}" | grep "colorprim" | cut -d "=" -f2)"
+				TRANSFER="$(echo "${X265_PARAMS}" | grep "transfer" | cut -d "=" -f2)"
+				SPACE="$(echo "${X265_PARAMS}" | grep "colormatrix" | cut -d "=" -f2)"
+				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${nv_crop}" -c:v h264_cuvid -i "${infile}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 18 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -c:a copy -c:s copy "${outfile}"
+			fi
 		else
 			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${X265_PARAMS}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
 		fi

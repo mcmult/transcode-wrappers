@@ -71,7 +71,7 @@ function transcode_files() {
 		echo "$(date): Transcoding $INFILE to $OUTFILE"
 		mkdir -p "${STAGEPATH}"
 		# If there is nothing to crop out, just strip non-english language
-		if [ "$(echo "${CROP}" | awk -F ':' '{print $1/$2}')" == "1.77778" ]; then
+		if [ "$(echo "${CROP}" | cut -d "=" -f2 | awk -F ':' '{print $1/$2}')" == "1.77778" ]; then
 			ffmpeg -i "${INFILE}" -map 0:m:language:eng -c:v copy -c:a copy -c:s copy "${OUTFILE}"
 		elif [ "$HDR" == "0" ]; then
 			if [ "x${X265_PARAMS}" == "x" ]; then

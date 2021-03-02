@@ -70,7 +70,10 @@ function transcode_files() {
 		set -e
 		echo "$(date): Transcoding $INFILE to $OUTFILE"
 		mkdir -p "${STAGEPATH}"
-		if [ "$HDR" == "0" ]; then
+		# If there is nothing to crop out, just strip non-english language
+		if [ "$(echo "${CROP}" | awk -F ':' '{print $1/$2}')" == "1.77778" ]; then
+			ffmpeg -i "${infile}" -map 0:m:language:eng -c:v copy -c:a copy -c:s copy "${outfile}"
+		elif [ "$HDR" == "0" ]; then
 			if [ "x${X265_PARAMS}" == "x" ]; then
 				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${nv_crop}" -c:v h264_cuvid -i "${infile}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 18 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${outfile}"
 			else

@@ -69,7 +69,7 @@ function transcode_files() {
 		if [ "x${HDR}" == "x" ]; then
 			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 18 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${OUTFILE}"
 		else
-			ffmpeg -vsync passthrough -hwaccel cuda -hwacel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${HDR}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
+			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${HDR}" -preset slow -crf 18 -c:a copy -c:s copy "${OUTFILE}"
 		fi
 		echo "$(date): Archiving $INFILE to ${FPATH}/${FNAME}"
 		mv "${INFILE}" "${FPATH}/${FNAME}"

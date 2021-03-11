@@ -16,7 +16,7 @@ function x265_setup() {
 	fi
 
 	# not HDR, but does have color space information
-	if [ "$(echo "$HDR_INFO" | grep -E -c "green_x=|blue_x=|red_x=")" != "0" ]; then
+	if [ "$(echo "$HDR_INFO" | grep -E -c "green_x=|blue_x=|red_x=")" == "0" ]; then
 		X265_PARAMS="colorprim=$(echo "$HDR_INFO" | grep "color_primaries=" | cut -d "=" -f2)"
 		X265_PARAMS="${X265_PARAMS}:transfer=$(echo "$HDR_INFO" | grep "color_transfer=" | cut -d "=" -f2)"
 		X265_PARAMS="${X265_PARAMS}:colormatrix=$(echo "$HDR_INFO" | grep "color_space=" | cut -d "=" -f2)"
@@ -55,6 +55,8 @@ function transcode_files() {
 					echo "Skipping for now, HDR not supported (yet)"
 					continue
 				fi
+			else
+				echo "not found"
 			fi
 		else
 			echo "not found"
@@ -75,9 +77,9 @@ function transcode_files() {
 			if [ "x${X265_PARAMS}" == "x" ]; then
 				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${OUTFILE}"
 			else
-				PRIMARIES="$(echo "${X265_PARAMS}" | grep "colorprim" | cut -d "=" -f2)"
-				TRANSFER="$(echo "${X265_PARAMS}" | grep "transfer" | cut -d "=" -f2)"
-				SPACE="$(echo "${X265_PARAMS}" | grep "colormatrix" | cut -d "=" -f2)"
+				PRIMARIES="$(echo "${X265_PARAMS}" | grep "colorprim" | cut -d "=" -f2 | cut -d ":" -f1)"
+				TRANSFER="$(echo "${X265_PARAMS}" | grep "transfer" | cut -d "=" -f2 | cut -d ":" -f1)"
+				SPACE="$(echo "${X265_PARAMS}" | grep "colormatrix" | cut -d "=" -f2 | cut -d ":" -f1)"
 				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v h264_cuvid -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -c:a copy -c:s copy "${OUTFILE}"
 			fi
 		else

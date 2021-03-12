@@ -70,15 +70,15 @@ function transcode_files() {
 		# If there is nothing to crop out, just strip non-english language
 		if [ "$HDR" == "0" ]; then
 			if [ "x${X265_PARAMS}" == "x" ]; then
-				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -vf "${CROP}" -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${OUTFILE}"
+				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -vf "${CROP}" -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${OUTFILE} 2>/dev/null"
 			else
 				PRIMARIES="$(echo "${X265_PARAMS}" | grep "colorprim" | cut -d "=" -f2 | cut -d ":" -f1)"
 				TRANSFER="$(echo "${X265_PARAMS}" | grep "transfer" | cut -d "=" -f2 | cut -d ":" -f1)"
 				SPACE="$(echo "${X265_PARAMS}" | grep "colormatrix" | cut -d "=" -f2 | cut -d ":" -f1)"
-				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -vf "${CROP}" -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -c:a copy -c:s copy "${OUTFILE}"
+				ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -vf "${CROP}" -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -c:a copy -c:s copy "${OUTFILE} 2>/dev/null"
 			fi
 		else
-			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -vf "${CROP}" -c:v libx265 -x265-params "${X265_PARAMS}" -preset slow -crf 16 -c:a copy -c:s copy "${OUTFILE}"
+			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -vf "${CROP}" -c:v libx265 -x265-params "${X265_PARAMS}" -preset slow -crf 16 -c:a copy -c:s copy "${OUTFILE} 2>/dev/null"
 		fi
 		echo "$(date): Archiving $INFILE to ${FPATH}/${FNAME}"
 		mv "${INFILE}" "${FPATH}/${FNAME}"

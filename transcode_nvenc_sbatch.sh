@@ -3,16 +3,25 @@
 #SBATCH --ntasks=1 --cpus-per-task=1 --mem=8192 --gres=gpu:1
 #SBATCH -o /home/mcmult/transcode-logs/%j__%x.log
 
-RAW_LOC="/data/videos-raw"
-FINAL_LOC="/data/videos/staging"
-
-INFILE="${1}"
-HDR_SUPPORTED="${2}"
+if [[ $# -ge 2 ]]; then
+	INFILE="${1}"
+	HDR_SUPPORTED="${2}"
+else
+	echo "Error: Must provide at least 2 arguments"
+	exit 1
+fi
 
 module load ffmpeg
 
 OLD_IFS="$IFS"
 IFS=$'\n'
+
+RAW_LOC="/data/videos-raw"
+FINAL_LOC="/data/videos/staging"
+FNAME=$(basename $INFILE | sed 's/\.raw//')
+FPATH=$(dirname $INFILE)
+STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
+OUTFILE="$STAGEPATH/$FNAME"
 
 function x265_setup() {
 	HDR_INFO=$(ffprobe -hide_banner -select_streams v -show_frames -read_intervals "%+#1" -show_entries "frame=color_space,color_primaries,color_transfer,side_data_list,pix_fmt" -i "${1}" 2>/dev/null)
@@ -47,10 +56,6 @@ function x265_setup() {
 }
 
 
-FNAME=$(basename $INFILE | sed 's/\.raw//')
-FPATH=$(dirname $INFILE)
-STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
-OUTFILE="$STAGEPATH/$FNAME"
 echo -n "Detecting HDR for $INFILE ... "
 X265_PARAMS=$(x265_setup "${INFILE}")
 HDR=0

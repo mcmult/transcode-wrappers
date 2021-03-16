@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 RAW_LOC="/data/videos-raw"
+FINAL_LOC="/data/videos/staging"
 HDR="no"
 
 module load slurm/20.11
@@ -14,3 +15,5 @@ for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *exclude* \
 done
 
 IFS="$OLD_IFS"
+
+sbatch --ntasks=1 --cpus-per-task=1 --gres=gpu:1 /home/mcmult/transcode-wrappers/fix_mkv_title.sh "${FINAL_LOC}"

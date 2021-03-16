@@ -62,7 +62,7 @@ function x265_setup() {
 }
 
 function nv_crop_detect() {
-	CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+	CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -threads "${THREADS}" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
 	# nvidia crop translation
 	NV_CROP_LR="$(echo ${CROP} | awk -F ':' '{print $3}')"
 	NV_CROP_TB="$(echo ${CROP} | awk -F ':' '{print $4}')"
@@ -97,15 +97,15 @@ mkdir -p "${STAGEPATH}"
 # If there is nothing to crop out, just strip non-english language
 if [ "$HDR" == "0" ]; then
 	if [ "x${X265_PARAMS}" == "x" ]; then
-		ffmpeg -threads "${THREADS}" -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -c:a copy -c:s copy "${OUTFILE}"
+		ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 	else
 		PRIMARIES="$(echo "${X265_PARAMS}" | grep "colorprim" | cut -d "=" -f2 | cut -d ":" -f1)"
 		TRANSFER="$(echo "${X265_PARAMS}" | grep "transfer" | cut -d "=" -f2 | cut -d ":" -f1)"
 		SPACE="$(echo "${X265_PARAMS}" | grep "colormatrix" | cut -d "=" -f2 | cut -d ":" -f1)"
-		ffmpeg -threads "${THREADS}" -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -c:a copy -c:s copy "${OUTFILE}"
+		ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 	fi
 else
-	ffmpeg -threads "${THREADS}" -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${X265_PARAMS}" -preset slow -crf 16 -c:a copy -c:s copy "${OUTFILE}"
+	ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${X265_PARAMS}" -preset slow -crf 16 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 fi
 echo "$(date): Archiving $INFILE to ${FPATH}/${FNAME}"
 mv "${INFILE}" "${FPATH}/${FNAME}"

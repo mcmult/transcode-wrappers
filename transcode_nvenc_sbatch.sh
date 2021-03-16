@@ -3,7 +3,10 @@
 #SBATCH --ntasks=1 --cpus-per-task=4 --mem=8192 --gres=gpu:1
 #SBATCH -o /home/mcmult/transcode-logs/%j__%x.log
 
-THREADS=4
+THREADS=$SLURM_CPUS_ON_NODE
+if [[ "x$THREADS" == "x" ]]; then
+	THREADS=$(grep -c processor /proc/cpuinfo)
+fi
 
 if [[ $# -ge 2 ]]; then
 	INFILE="${1}"
@@ -57,6 +60,14 @@ function x265_setup() {
 	echo -n "$X265_PARAMS"
 }
 
+function nv_crop_detect() {
+	CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+	# nvidia crop translation
+	NV_CROP_LR="$(echo ${CROP} | awk -F ':' '{print $3}')"
+	NV_CROP_TB="$(echo ${CROP} | awk -F ':' '{print $4}')"
+	NV_CROP="${NV_CROP_TB}x${NV_CROP_TB}x${NV_CROP_LR}x${NV_CROP_LR}"
+	echo "${NV_CROP}"
+}
 
 echo -n "Detecting HDR for $INFILE ... "
 X265_PARAMS=$(x265_setup "${INFILE}")
@@ -76,13 +87,8 @@ else
 	echo "not found"
 fi
 echo -n "Detecting Crop for $INFILE ... "
-CROP=$(ffmpeg -threads "${THREADS}" -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-echo -n "${CROP}"
-# nvidia crop translation
-NV_CROP_LR="$(echo ${CROP} | awk -F ':' '{print $3}')"
-NV_CROP_TB="$(echo ${CROP} | awk -F ':' '{print $4}')"
-NV_CROP="${NV_CROP_TB}x${NV_CROP_TB}x${NV_CROP_LR}x${NV_CROP_LR}"
-echo " ${NV_CROP}"
+NV_CROP=$(nv_crop_detect "${INFILE}")
+echo "${NV_CROP}"
 NV_DEC="$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${1}")_cuvid"
 set -e
 echo "$(date): Transcoding $INFILE to $OUTFILE"

@@ -17,6 +17,7 @@ else
 fi
 
 module load ffmpeg
+ffmpeg -version
 
 OLD_IFS="$IFS"
 IFS=$'\n'

@@ -74,12 +74,12 @@ echo -n "Detecting HDR for $INFILE ... "
 X265_PARAMS=$(x265_setup "${INFILE}")
 HDR=0
 if [ "x${X265_PARAMS}" != "x" ]; then
-	if [ $(echo ${X265_PARAMS} | grep -E -c "green_x=|blue_x=|red_x=") != 0 ]; then
+	if [ $(echo ${X265_PARAMS} | grep -c "hdr-opt=1") != 0 ]; then
 		echo "HDR found ($X265_PARAMS)"
 		HDR=1
 		if [ "${HDR_SUPPORTED}" != "yes" ]; then
-			echo "Skipping for now, HDR not supported (yet)"
-			continue
+			echo "Skipping, HDR transcoding was not requested."
+			exit
 		fi
 	else
 		echo "not found"

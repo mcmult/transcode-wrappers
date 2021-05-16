@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-RAW_LOC="/data/videos-raw"
+RAW_LOC="/mnt/data/videos-raw"
 ARCHIVE_LOC="/data/videos-raw/ZZ_Done"
 FINAL_LOC="/data/videos/staging"
 

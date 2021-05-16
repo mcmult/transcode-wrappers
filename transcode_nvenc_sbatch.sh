@@ -22,7 +22,7 @@ ffmpeg -version
 OLD_IFS="$IFS"
 IFS=$'\n'
 
-RAW_LOC="/data/videos-raw"
+RAW_LOC="/mnt/data/videos-raw"
 FINAL_LOC="/data/videos/staging"
 FNAME=$(basename $INFILE | sed 's/\.raw//')
 FPATH=$(dirname $INFILE)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-RAW_LOC="/data/videos-raw"
+RAW_LOC="/mnt/data/videos-raw"
 FINAL_LOC="/data/videos/staging"
 HDR="no"
 

@@ -90,7 +90,8 @@ fi
 echo -n "Detecting Crop for $INFILE ... "
 NV_CROP=$(nv_crop_detect "${INFILE}")
 echo "${NV_CROP}"
-NV_DEC="$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${1}")_cuvid"
+NV_DEC="$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${1}" | sed 's/video//')_cuvid"
+
 set -e
 echo "$(date): Transcoding $INFILE to $OUTFILE"
 mkdir -p "${STAGEPATH}"

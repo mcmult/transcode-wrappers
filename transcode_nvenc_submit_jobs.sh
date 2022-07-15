@@ -4,7 +4,7 @@ RAW_LOC="/mnt/data/videos-raw"
 FINAL_LOC="/data/videos/staging"
 HDR="no"
 
-module load slurm/20.11
+module load slurm/22.05
 
 OLD_IFS="$IFS"
 IFS=$'\n'

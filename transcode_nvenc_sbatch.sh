@@ -29,6 +29,8 @@ FPATH=$(dirname $INFILE)
 STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
 OUTFILE="$STAGEPATH/$FNAME"
 
+set -x
+
 function x265_setup() {
 	HDR_INFO=$(ffprobe -hide_banner -select_streams v -show_frames -read_intervals "%+#1" -show_entries "frame=color_space,color_primaries,color_transfer,side_data_list,pix_fmt" -i "${1}" 2>/dev/null)
 

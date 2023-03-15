@@ -82,6 +82,8 @@ function get_field_order() {
 	echo "${FIELD_ORDER}"
 }
 
+ENCODER="hevc_nvenc"
+
 echo -n "Getting resolution for $INFILE ... "
 INPUT_RESOLUTION=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${INFILE}")
 echo "${INPUT_RESOLUTION}"
@@ -97,6 +99,7 @@ if [ "x${X265_PARAMS}" != "x" ]; then
 			echo "Skipping, HDR transcoding was not requested."
 			exit
 		fi
+		ENCODER="libx265"
 	else
 		echo "not found"
 	fi
@@ -118,22 +121,22 @@ mkdir -p "${STAGEPATH}"
 if [ "$HDR" == "0" ]; then
 	if [ "x${X265_PARAMS}" == "x" ]; then
 		if [ "${FIELD_ORDER}" != "progressive" ]; then
-			ffmpeg -vsync passthrough -i "${INFILE}" -vf "${CP_CROP},fieldmatch,yadif=deint=interlaced,decimate" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
+			ffmpeg -vsync passthrough -i "${INFILE}" -vf "${CP_CROP},fieldmatch,yadif=deint=interlaced,decimate" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v "${ENCODER}" -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 		else
-			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
+			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v "${ENCODER}" -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 		fi
 	else
 		PRIMARIES="$(echo "${X265_PARAMS}" | grep "colorprim" | cut -d "=" -f2 | cut -d ":" -f1)"
 		TRANSFER="$(echo "${X265_PARAMS}" | grep "transfer" | cut -d "=" -f2 | cut -d ":" -f1)"
 		SPACE="$(echo "${X265_PARAMS}" | grep "colormatrix" | cut -d "=" -f2 | cut -d ":" -f1)"
 		if [ "${FIELD_ORDER}" != "progressive" ]; then
-			ffmpeg -vsync passthrough -i "${INFILE}" -vf "${CP_CROP},fieldmatch,yadif=deint=interlaced,decimate" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
+			ffmpeg -vsync passthrough -i "${INFILE}" -vf "${CP_CROP},fieldmatch,yadif=deint=interlaced,decimate" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v "${ENCODER}" -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 		else
-			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v hevc_nvenc -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
+			ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v "${ENCODER}" -preset slow -cq:v 16 -rc 1 -profile:v 1 -tier 1 -spatial_aq 1 -temporal_aq 1 -rc_lookahead 48 -color_primaries "${PRIMARIES}" -color_trc "${TRANSFER}" -colorspace "${SPACE}" -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 		fi
 	fi
 else
-	ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v libx265 -x265-params "${X265_PARAMS}" -preset slow -crf 16 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
+	ffmpeg -vsync passthrough -hwaccel cuda -hwaccel_output_format cuda -crop "${NV_CROP}" -c:v "${NV_DEC}" -i "${INFILE}" -max_muxing_queue_size 1024 -fflags +genpts -map 0:m:language:eng -c:v "${ENCODER}" -x265-params "${X265_PARAMS}" -preset slow -crf 16 -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 fi
 echo "$(date): Archiving $INFILE to ${FPATH}/${FNAME}"
 mv "${INFILE}" "${FPATH}/${FNAME}"

@@ -88,6 +88,10 @@ echo -n "Getting resolution for $INFILE ... "
 INPUT_RESOLUTION=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${INFILE}")
 echo "${INPUT_RESOLUTION}"
 
+if [[ "x${INPUT_RESOLUTION}" == "x720x480"* ]]; then
+	ENCODER="h264_nvenc"
+fi
+
 echo -n "Detecting HDR for $INFILE ... "
 X265_PARAMS=$(x265_setup "${INFILE}")
 HDR=0

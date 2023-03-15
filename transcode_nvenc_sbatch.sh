@@ -90,26 +90,27 @@ echo "${INPUT_RESOLUTION}"
 
 if [[ "x${INPUT_RESOLUTION}" == "x720x480"* ]]; then
 	ENCODER="h264_nvenc"
-fi
-
-echo -n "Detecting HDR for $INFILE ... "
-X265_PARAMS=$(x265_setup "${INFILE}")
-HDR=0
-if [ "x${X265_PARAMS}" != "x" ]; then
-	if [ $(echo ${X265_PARAMS} | grep -c "hdr-opt=1") != 0 ]; then
-		echo "HDR found ($X265_PARAMS)"
-		HDR=1
-		if [ "${HDR_SUPPORTED}" != "yes" ]; then
-			echo "Skipping, HDR transcoding was not requested."
-			exit
+else
+	echo -n "Detecting HDR for $INFILE ... "
+	X265_PARAMS=$(x265_setup "${INFILE}")
+	HDR=0
+	if [ "x${X265_PARAMS}" != "x" ]; then
+		if [ $(echo ${X265_PARAMS} | grep -c "hdr-opt=1") != 0 ]; then
+			echo "HDR found ($X265_PARAMS)"
+			HDR=1
+			if [ "${HDR_SUPPORTED}" != "yes" ]; then
+				echo "Skipping, HDR transcoding was not requested."
+				exit
+			fi
+			ENCODER="libx265"
+		else
+			echo "not found"
 		fi
-		ENCODER="libx265"
 	else
 		echo "not found"
 	fi
-else
-	echo "not found"
 fi
+
 echo -n "Detecting Crop for $INFILE ... "
 CP_CROP=$(crop_detect)
 NV_CROP=$(nv_crop_detect "${CP_CROP}")

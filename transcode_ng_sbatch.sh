@@ -101,7 +101,7 @@ set -e
 echo "$(date): Transcoding $INFILE to $OUTFILE"
 mkdir -p "${STAGEPATH}"
 
-ffmpeg -hwaccel auto -i "${INFILE}" -map 0:m:language:eng -c:v ${ENCODER} ${CP_CROP} ${ENCODER_PARAMS} -pix_fmt "${OUTPUT_PIXFMT}" -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
+ffmpeg -vsync passthrough -hwaccel auto -i "${INFILE}" -map 0:m:language:eng -c:v ${ENCODER} ${CP_CROP} ${ENCODER_PARAMS} -pix_fmt "${OUTPUT_PIXFMT}" -threads "${THREADS}" -c:a copy -c:s copy "${OUTFILE}"
 
 if [[ "${INFILE}" == *".raw.mkv" ]]; then
 	echo "$(date): Archiving $INFILE to ${FPATH}/${FNAME}"

@@ -35,6 +35,7 @@ OUTFILE="$STAGEPATH/$FNAME"
 IFS="$OLD_IFS"
 
 SVTAV1_PARAMS="-crf 20 -preset 8 -g 120 -svtav1-params tune=0:enable-overlays=1:scd=1"
+LIBX264_PARAMS="-crf 16 -preset medium"
 OUTPUT_PIXFMT="yuv420p10le"
 
 set -x
@@ -81,7 +82,8 @@ INPUT_RESOLUTION=$(ffprobe -v error -select_streams v:0 -show_entries stream=wid
 echo "${INPUT_RESOLUTION}"
 
 if [[ "x${INPUT_RESOLUTION}" == "x720x480"* ]]; then
-	ENCODER="h264_nvenc"
+	ENCODER="libx264"
+	ENCODER_PARAMS=$LIBX264_PARAMS
 else
 	ENCODER="libsvtav1"
 	ENCODER_PARAMS=$(SVTAV1_HDR_setup "${INFILE}")

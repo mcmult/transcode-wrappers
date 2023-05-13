@@ -85,17 +85,22 @@ function get_field_order() {
 	echo "${FIELD_ORDER}"
 }
 
-echo -n "Getting resolution for $INFILE ... "
-INPUT_RESOLUTION=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${INFILE}")
-echo "${INPUT_RESOLUTION}"
-
-if [[ "x${INPUT_RESOLUTION}" == "x720x480"* ]]; then
-	ENCODER="libx264"
-	ENCODER_PARAMS=$LIBX264_PARAMS
-else
+if [ -z "${ENCODER}" ]; then
 	ENCODER="libsvtav1"
-	ENCODER_PARAMS=$(SVTAV1_HDR_setup "${INFILE}")
 fi
+
+case "${ENCODER}" in
+	"libx264")
+		ENCODER_PARAMS=$LIBX264_PARAMS
+		;;
+	"libsvtav1")
+		ENCODER_PARAMS=$(SVTAV1_HDR_setup "${INFILE}")
+		;;
+	*)
+		echo "Error: invalid encoder \"${ENCODER}\""
+		exit
+		;;
+esac
 
 if [ ! -z "$CROP" ]; then
 	CP_CROP="-vf ${CROP}"

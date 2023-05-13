@@ -34,7 +34,7 @@ OUTFILE="$STAGEPATH/$FNAME"
 
 IFS="$OLD_IFS"
 
-SVTAV1_PARAMS="-crf 20 -preset 8 -g 120 -svtav1-params tune=0:enable-overlays=1:scd=1"
+SVTAV1_PARAMS="-crf 20 -preset 8 -g 120 -svtav1-params tune=0:enable-overlays=1:scd=1:lp=${THREADS}"
 LIBX264_PARAMS="-crf 16 -preset medium"
 OUTPUT_PIXFMT="yuv420p10le"
 

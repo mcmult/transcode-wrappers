@@ -4,7 +4,7 @@ RAW_LOC="/mnt/data/videos-raw"
 FINAL_LOC="/data/videos/staging"
 HDR="no"
 
-module load slurm
+module load slurm ffmpeg-tc
 
 OLD_IFS="$IFS"
 IFS=$'\n'

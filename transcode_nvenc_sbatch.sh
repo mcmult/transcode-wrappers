@@ -16,7 +16,6 @@ else
 	exit 1
 fi
 
-module load ffmpeg
 ffmpeg -version
 
 OLD_IFS="$IFS"

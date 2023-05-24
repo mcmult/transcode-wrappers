@@ -63,7 +63,15 @@ function x265_setup() {
 }
 
 function crop_detect() {
-	CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=24:2:0" -threads "${THREADS}" -t 900 -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+	if [ "$1" != "force" ]; then
+		CROP=$(grep "${FNAME}" crop_db | awk -F '|' '{print $2}')
+		if [ ! -z "${CROP}" ]; then
+			echo "${CROP}"
+			return
+		fi
+	fi
+	CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=0.0941176471:2:0" -threads "${THREADS}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+	echo "${FNAME}|${CROP}" >> crop_db
 	echo "${CROP}"
 }
 

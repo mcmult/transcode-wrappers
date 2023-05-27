@@ -76,7 +76,7 @@ function crop_detect() {
 			return
 		fi
 	fi
-	CROP=$(ffmpeg -hwaccel auto -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=0.0941176471:2:0" -threads "${THREADS}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+	CROP=$(ffmpeg -i "${INFILE}" -max_muxing_queue_size 1024 -vf "cropdetect=0.0941176471:2:0" -threads "${THREADS}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
 	echo "${FNAME}|${CROP}" >> crop_db
 	echo "${CROP}"
 }
@@ -120,7 +120,7 @@ set -e
 echo "$(date): Transcoding $INFILE to $OUTFILE"
 mkdir -p "${STAGEPATH}"
 
-ffmpeg -hwaccel auto -i "${INFILE}" -map 0:m:language:eng -c:v ${ENCODER} ${CP_CROP} ${ENCODER_PARAMS} -pix_fmt "${OUTPUT_PIXFMT}" -threads "${THREADS}" -c:a copy -c:s copy -fps_mode passthrough "${OUTFILE}"
+ffmpeg -i "${INFILE}" -map 0:m:language:eng -c:v ${ENCODER} ${CP_CROP} ${ENCODER_PARAMS} -pix_fmt "${OUTPUT_PIXFMT}" -threads "${THREADS}" -c:a copy -c:s copy -fps_mode passthrough "${OUTFILE}"
 
 if [[ "${INFILE}" == *".raw.mkv" ]]; then
 	echo "$(date): Archiving $INFILE to ${FPATH}/${FNAME}"

@@ -36,6 +36,7 @@ IFS="$OLD_IFS"
 
 SVTAV1_PARAMS="-crf 20 -preset 8 -g 120 -svtav1-params tune=0:enable-overlays=1:scd=1:lp=${THREADS}"
 LIBX264_PARAMS="-crf 16 -preset medium"
+LIBX265_PARAMS="-crf 16 -preset medium"
 OUTPUT_PIXFMT="yuv420p10le"
 
 set -x
@@ -92,6 +93,9 @@ fi
 case "${ENCODER}" in
 	"libx264")
 		ENCODER_PARAMS=$LIBX264_PARAMS
+		;;
+	"libx265")
+		ENCODER_PARAMS=${LIBX265_PARAMS}
 		;;
 	"libsvtav1")
 		ENCODER_PARAMS=$(SVTAV1_HDR_setup "${INFILE}")

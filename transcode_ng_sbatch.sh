@@ -3,6 +3,66 @@
 #SBATCH --ntasks=1 --cpus-per-task=16 --mem=32G
 #SBATCH -o /home/mcmult/transcode-logs/%j__%x.log
 
+### Option Parsing ###
+function show_help() {
+	echo -e "Usage: $(basename ${1}) [OPTIONS]"
+	echo -e "\t-e\tSpecify what library to use to encode video.  Default is libsvtav1."
+	echo -e "\t-f\tRoot directory where final file should go. This option is mandatory."
+	echo -e "\t-l\tRoot directory where raw files live. This option is mandatory."
+	echo -e "\t-i\tInput file to operate on. This option is mandatory."
+	echo -e "\t-h|?\tDisplay this help text"
+}
+
+OPTIND=1
+
+INFILE=""
+RAW_LOC=""
+FINAL_LOC=""
+
+OLD_IFS="$IFS"
+IFS=$'\n'
+
+while getopts "h?e:f:i:l:" opt; do
+	case "$opt" in
+		h|\?)
+			show_help $0
+			;;
+		e)
+			ENCODER=${OPTARG}
+			if [[ "libsvtav1 libx264 libx265" != *"$ENCODER"* ]]; then
+				echo "Error: $ENCODER is not supported at this time."
+				exit 1
+			fi
+			;;
+		f)
+			FINAL_LOC=${OPTARG}
+			;;
+		i)
+			INFILE=${OPTARG}
+			;;
+		l)
+			RAW_LOC=${OPTARG}
+			;;
+	esac
+done
+
+shift $((OPTIND-1))
+
+if [[ -z "$FINAL_LOC" ]] || [[ -z "$INFILE" ]] || [[ -z "$RAW_LOC" ]]; then
+	echo "Error, -f -i and -l must all be specified."
+	show_help $0
+	exit 1
+fi
+
+### Set variables ###
+FNAME=$(basename $INFILE | sed 's/\.raw//')
+FPATH=$(dirname $INFILE)
+STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
+OUTFILE="$STAGEPATH/$FNAME"
+
+IFS="$OLD_IFS"
+
+### Set thread count ###
 THREADS=$SLURM_CPUS_ON_NODE
 if [[ "x$THREADS" == "x" ]]; then
 	THREADS=$(grep -c processor /proc/cpuinfo)
@@ -11,33 +71,15 @@ if [[ "x$THREADS" == "x" ]]; then
 	fi
 fi
 
-if [[ $# -ge 1 ]]; then
-	INFILE="${1}"
-	CROP="${2}"
-else
-	echo "Error: Must provide at least 2 arguments"
-	exit 1
-fi
-
-module load ffmpeg-tc
-ffmpeg -version
-
-OLD_IFS="$IFS"
-IFS=$'\n'
-
-RAW_LOC="/mnt/data/videos-raw"
-FINAL_LOC="/data/videos/staging"
-FNAME=$(basename $INFILE | sed 's/\.raw//')
-FPATH=$(dirname $INFILE)
-STAGEPATH="$FINAL_LOC/${FPATH#$RAW_LOC}"
-OUTFILE="$STAGEPATH/$FNAME"
-
-IFS="$OLD_IFS"
-
+### Default output options ###
 SVTAV1_PARAMS="-crf 20 -preset 8 -g 120 -svtav1-params tune=0:enable-overlays=1:scd=1:lp=${THREADS}"
 LIBX264_PARAMS="-crf 16 -preset medium"
 LIBX265_PARAMS="-crf 16 -preset medium"
 OUTPUT_PIXFMT="yuv420p10le"
+
+### Load ffmpeg ###
+module load ffmpeg-tc
+ffmpeg -version
 
 set -x
 

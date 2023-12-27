@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-RAW_LOC="/mnt/data/videos-raw"
-FINAL_LOC="/data/videos/staging"
+RAW_LOC="/mnt/media-raw"
+FINAL_LOC="/mnt/media/staging"
 
 module load slurm ffmpeg-tc
 
@@ -13,7 +13,7 @@ FIXUP_DEPEND=""
 
 for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *exclude* \) | sort ); do
 	JOB_NAME=$(basename $INFILE | sed 's/\.raw//' | sed 's/\ /_/g')
-	SUBMIT=$(sbatch --job-name="${JOB_NAME}" /home/mcmult/transcode-wrappers/transcode_ng_sbatch.sh ${INFILE})
+	SUBMIT=$(sbatch --job-name="${JOB_NAME}" /home/mcmult/transcode-wrappers/transcode_ng_sbatch.sh -f "${FINAL_LOC}" -l "${RAW_LOC}" -i "${INFILE}")
 	JOB_ID=$(echo "${SUBMIT##* }")
 	if [[ -z ${FIXUP_DEPEND} ]]; then
 		FIXUP_DEPEND="afterany:${JOB_ID}"

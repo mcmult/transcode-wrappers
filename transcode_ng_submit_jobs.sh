@@ -13,7 +13,13 @@ FIXUP_DEPEND=""
 
 for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *exclude* \) | sort ); do
 	JOB_NAME=$(basename $INFILE | sed 's/\.raw//' | sed 's/\ /_/g')
-	SUBMIT=$(sbatch --job-name="${JOB_NAME}" /home/mcmult/transcode-wrappers/transcode_ng_sbatch.sh -f "${FINAL_LOC}" -l "${RAW_LOC}" -i "${INFILE}")
+	WIDTH=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ${INFILE})
+	if [[ "$WIDTH" -le "1920" ]]; then
+		ENCODER="libx265"
+	else
+		ENCODER="libsvtav1"
+	fi
+	SUBMIT=$(sbatch --job-name="${JOB_NAME}" /home/mcmult/transcode-wrappers/transcode_ng_sbatch.sh -f "${FINAL_LOC}" -l "${RAW_LOC}" -i "${INFILE}" -e "${ENCODER}")
 	JOB_ID=$(echo "${SUBMIT##* }")
 	if [[ -z ${FIXUP_DEPEND} ]]; then
 		FIXUP_DEPEND="afterany:${JOB_ID}"

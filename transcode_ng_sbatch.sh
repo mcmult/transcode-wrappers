@@ -112,7 +112,7 @@ function SVTAV1_HDR_setup() {
 
 function crop_detect() {
 	if [ "$1" != "force" ]; then
-		CROP=$(grep "${FNAME}" crop_db | awk -F '|' '{print $2}')
+		CROP=$(grep -F "${FNAME}" crop_db | awk -F '|' '{print $2}')
 		if [ ! -z "${CROP}" ]; then
 			echo "${CROP}"
 			return

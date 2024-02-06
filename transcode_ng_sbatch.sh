@@ -95,14 +95,36 @@ function SVTAV1_HDR_setup() {
 	# not HDR, but does have color space information
 	if [ "$(echo "$HDR_INFO" | grep -E -c "green_x=|blue_x=|red_x=")" != "0" ]; then
 		IS_HDR=1
+		# Pre-processing to get the fraction and floating point version of the master data.
+		# This is crazy, at some point I should write this in python.
+		GX=$(echo "$HDR_INFO" | grep "green_x=" | cut -d "=" -f2)
+		GXF=$(echo "scale=4;$GX" | bc)
+		GY=$(echo "$HDR_INFO" | grep "green_y=" | cut -d "=" -f2)
+		GYF=$(echo "scale=4;$GY" | bc)
+		BX=$(echo "$HDR_INFO" | grep "blue_x=" | cut -d "=" -f2)
+		BXF=$(echo "scale=4;$BX" | bc)
+		BY=$(echo "$HDR_INFO" | grep "blue_y=" | cut -d "=" -f2)
+		BYF=$(echo "scale=4;$BY" | bc)
+		RX=$(echo "$HDR_INFO" | grep "red_x=" | cut -d "=" -f2)
+		RXF=$(echo "scale=4;$RX" | bc)
+		RY=$(echo "$HDR_INFO" | grep "red_y=" | cut -d "=" -f2)
+		RYF=$(echo "scale=4;$RY" | bc)
+		WPX=$(echo "$HDR_INFO" | grep "white_point_x=" | cut -d "=" -f2)
+		WPXF=$(echo "scale=4;$WPX" | bc)
+		WPY=$(echo "$HDR_INFO" | grep "white_point_y=" | cut -d "=" -f2)
+		WPYF=$(echo "scale=4;$WPY" | bc)
+		MAXL=$(echo "$HDR_INFO" | grep "max_luminance=" | cut -d "=" -f2)
+		MAXLF=$(echo "scale=4;$MAXL" | bc)
+		MINL=$(echo "$HDR_INFO" | grep "min_luminance=" | cut -d "=" -f2)
+		MINLF=$(echo "scale=4;$MINL" | bc)
 		SVTAV1_PARAMS="-color_primaries:v $(echo "$HDR_INFO" | grep "color_primaries=" | cut -d "=" -f2) ${SVTAV1_PARAMS}"
 		SVTAV1_PARAMS="-color_trc:v $(echo "$HDR_INFO" | grep "color_transfer=" | cut -d "=" -f2) ${SVTAV1_PARAMS}"
 		SVTAV1_PARAMS="${SVTAV1_PARAMS}:mastering-display="
-		SVTAV1_PARAMS="${SVTAV1_PARAMS}G($(echo "$HDR_INFO" | grep "green_x=" | cut -d "=" -f2),$(echo "$HDR_INFO" | grep "green_y=" | cut -d "=" -f2))"
-		SVTAV1_PARAMS="${SVTAV1_PARAMS}B($(echo "$HDR_INFO" | grep "blue_x=" | cut -d "=" -f2),$(echo "$HDR_INFO" | grep "blue_y=" | cut -d "=" -f2))"
-		SVTAV1_PARAMS="${SVTAV1_PARAMS}R($(echo "$HDR_INFO" | grep "red_x=" | cut -d "=" -f2),$(echo "$HDR_INFO" | grep "red_y=" | cut -d "=" -f2))"
-		SVTAV1_PARAMS="${SVTAV1_PARAMS}WP($(echo "$HDR_INFO" | grep "white_point_x=" | cut -d "=" -f2),$(echo "$HDR_INFO" | grep "white_point_y=" | cut -d "=" -f2))"
-		SVTAV1_PARAMS="${SVTAV1_PARAMS}L($(echo "$HDR_INFO" | grep "max_luminance=" | cut -d "=" -f2),$(echo "$HDR_INFO" | grep "min_luminance=" | cut -d "=" -f2))"
+		SVTAV1_PARAMS="${SVTAV1_PARAMS}R($RXF,$RYF)"
+		SVTAV1_PARAMS="${SVTAV1_PARAMS}G($GXF,$GYF)"
+		SVTAV1_PARAMS="${SVTAV1_PARAMS}B($BXF,$BYF)"
+		SVTAV1_PARAMS="${SVTAV1_PARAMS}WP($WPXF,$WPYF)"
+		SVTAV1_PARAMS="${SVTAV1_PARAMS}L($MAXLF,$MINLF)"
 		SVTAV1_PARAMS="${SVTAV1_PARAMS}:content-light=$(echo "$HDR_INFO" | grep "max_content=" | cut -d "=" -f2 | cut -d "/" -f1),$(echo "$HDR_INFO" | grep "max_average=" | cut -d "=" -f2 | cut -d "/" -f1)"
 		#SVTAV1_PARAMS="${SVTAV1_PARAMS}:matrix-coefficients=$(echo "$HDR_INFO" | grep "color_space=" | cut -d "=" -f2)"
 	fi

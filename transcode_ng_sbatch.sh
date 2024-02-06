@@ -148,12 +148,19 @@ case "${ENCODER}" in
 		;;
 esac
 
+SRC_RES=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "${INFILE}" | sed s/x/:/)
+
 if [ -z "$CROP" ]; then
 	echo -n "Detecting Crop for $INFILE ... "
 	CROP="$(crop_detect)"
 fi
-CP_CROP="-vf ${CROP}"
-echo "${CP_CROP}"
+if [ "crop=${SRC_RES}:0:0" == "${CROP}" ]; then
+	echo "Crop filter disabled: input and output resolution is the same."
+	CP_CROP=""
+else
+	CP_CROP="-vf ${CROP}"
+	echo "Crop filter enabled: ${CP_CROP}"
+fi
 FIELD_ORDER=$(get_field_order)
 echo "FIELD_ORDER = $FIELD_ORDER"
 

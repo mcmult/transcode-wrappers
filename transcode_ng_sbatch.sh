@@ -74,7 +74,7 @@ fi
 ### Default output options ###
 SVTAV1_PARAMS="-crf 20 -preset 8 -g 120 -svtav1-params tune=0:enable-overlays=1:scd=1:lp=${THREADS}"
 LIBX264_PARAMS="-crf 16 -preset medium"
-LIBX265_PARAMS="-crf 16 -preset medium"
+LIBX265_PARAMS="-crf 18 -preset medium"
 OUTPUT_PIXFMT="yuv420p10le"
 
 ### Load ffmpeg ###

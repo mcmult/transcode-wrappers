@@ -148,12 +148,11 @@ case "${ENCODER}" in
 		;;
 esac
 
-if [ ! -z "$CROP" ]; then
-	CP_CROP="-vf ${CROP}"
-else
+if [ -z "$CROP" ]; then
 	echo -n "Detecting Crop for $INFILE ... "
-	CP_CROP="-vf $(crop_detect)"
+	CROP="$(crop_detect)"
 fi
+CP_CROP="-vf ${CROP}"
 echo "${CP_CROP}"
 FIELD_ORDER=$(get_field_order)
 echo "FIELD_ORDER = $FIELD_ORDER"

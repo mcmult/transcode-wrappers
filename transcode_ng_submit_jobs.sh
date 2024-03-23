@@ -13,7 +13,7 @@ FIXUP_DEPEND=""
 
 for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *exclude* \) | sort ); do
 	JOB_NAME=$(basename $INFILE | sed 's/\.raw//' | sed 's/\ /_/g')
-	WIDTH=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ${INFILE})
+	WIDTH=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ${INFILE} | awk -F 'x' '{print $1}')
 	if [[ "$WIDTH" -le "1920" ]]; then
 		ENCODER="libx265"
 	else

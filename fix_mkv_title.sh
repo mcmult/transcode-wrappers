@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+module load ffmpeg-tc
+
 if [ "$#" != "1" ]; then
 	echo "Must provide a path to search for MKV files"
 	exit 1;

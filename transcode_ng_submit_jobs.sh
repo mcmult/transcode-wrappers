@@ -11,8 +11,13 @@ IFS=$'\n'
 #fix_mkv_title dependency list
 FIXUP_DEPEND=""
 
+EXISTING_JOBS=$(scontrol show job | grep -i JobName | awk -F '=' '{print $3}')
+
 for INFILE in $(find "${RAW_LOC}" -type f \( -name *.raw* -a ! -path *exclude* \) | sort ); do
 	JOB_NAME=$(basename $INFILE | sed 's/\.raw//' | sed 's/\ /_/g')
+	if [[ $EXISTING_JOBS == *"$JOB_NAME"* ]]; then
+		continue
+	fi
 	WIDTH=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=s=x:p=0 ${INFILE} | awk -F 'x' '{print $1}')
 	if [[ "$WIDTH" -le "1920" ]]; then
 		ENCODER="libx265"
